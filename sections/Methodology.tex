@@ -1,0 +1,50 @@
+\section{Methodology}
+\label{sec:methodology}
+
+This study employs an empirical analysis conducted through independent manual investigation by two researchers, both of whom are co-authors of this paper. The analysis comprises five stages: 
+\begin{enumerate*}
+    \item collection of information on real-world reentrancy attacks from online sources;
+    \item extraction of transaction metadata to characterize each incident;
+    \item independent inspection of invocation flows to identify vulnerabilities and attack mechanisms;
+    \item clustering and categorization of incidents based on attack flow similarities; and
+    \item reconciliation of results through discussion to resolve discrepancies.
+\end{enumerate*}
+We describe each step. 
+
+
+\subsection{Data Collection}
+\label{methodology:data-collection}
+
+We collect reentrancy incidents from three primary sources: 
+\begin{enumerate*}  
+    \item a GitHub repository curated by a white-hat researcher~\cite{reentrancy-list-pcaversaccio},  
+    \item BlockSec's incident records~\cite{blocksec-security-incidents}, and  
+    \item SlowMist's hack events archive~\cite{slowmist-hacked}.  
+\end{enumerate*}  
+Although these sources are neither exhaustive nor verified, they are the most comprehensive public datasets available, comprising \ReentrancyTotalRecord{} incidents. We exclude seven cases: six that we determined do not involve reentrancy upon further analysis, and one on a lesser-known blockchain unsupported by our tooling. This yields a dataset of \ReentrancyTotalAnalyzed{} incidents. To support reproducibility and further research in this area, the curated dataset used in this study has been made publicly available~\cite{our-dataset}.
+
+These sources provide key details such as victim project names, dates, and often links to original reports by security firms, post-mortems, or social media disclosures. When available, transaction hashes are used to locate the exploit transactions. We supplement this data with targeted searches for public reports and verify each incident by inspecting the attacker's address on Etherscan.
+
+
+\subsection{Metadata Extraction}
+
+We extract relevant metadata from each exploit transaction, including the timestamp of the initial transaction, the involved blockchain(s), and the deployment timestamps of both vulnerable and attacker contracts. These details enable us to analyze execution patterns and track the timeline from vulnerability introduction to exploitation.
+
+
+\subsection{Transaction Analysis}
+\label{methodology:transaction-analysis}
+
+We use BlockSec Phalcon Explorer~\cite{blocksec-security-incidents} and Tenderly Explorer~\cite{tenderly} to examine token flows and call traces. The call trace presents inter-contract EVM operations as a stack of nested calls, helping us identify the reentrancy entry point, scope, and vulnerability origin using verified contract source code from Etherscan. Token flow analysis corroborates the findings and quantifies financial impact.
+
+Although public incident reports are referenced, they often lack sufficient detail or contain inconsistencies. Therefore, the insights in this study are  derived from our own analyses.
+
+
+\subsection{Categorization}
+
+Following transaction analysis, we adopt an open coding approach to cluster incidents based on similarities in attack flows. We first define initial codes reflecting specific exploit structures, then generalize them by merging those with shared underlying strategies. For example, attacks involving price oracle manipulation and pool formula manipulation are grouped under the broader category of ``price manipulation.'' We prioritize alignment with established terminology where possible. However, many clusters do not align well with existing terms. Consequently, we introduce new terminologies to describe these emergent categories.
+
+
+\subsection{Cross-Validation}
+\label{methodology:cross-validation}
+
+Upon completing independent analyses, the two researchers cross-review each other's findings to identify and resolve discrepancies. Any disagreements are discussed until consensus is reached. This collaborative validation minimizes interpretation bias and ensures consistency across cases.

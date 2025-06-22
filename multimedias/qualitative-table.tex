@@ -1,0 +1,42 @@
+\bgroup
+\def\arraystretch{1.4}
+\begin{table*}[htbp]
+    \centering
+    \caption{Case Study Summary for Qualitative Analysis}
+    \vspace{-1mm}
+    
+\begin{footnotesize}
+    \begin{tabular}{|p{0.3cm}|p{3.9cm}|p{1.6cm}|p{10.5cm}|}
+        \hline
+        \textbf{No.} & \textbf{Name} & \textbf{Date} & \textbf{Vulnerability Description} \\
+        \hline
+        \hyperref[case-study:1]{1} & ChainPaint Attack & Feb 12, 2024 & Old-school pattern using user balance updates after \lstinline$call.value$ transfers, similar to the vulnerability exploited in The DAO attack. \\
+        \hline
+        \hyperref[case-study:2]{2} & Peapods Finance Whitehat Attack & Dec 13, 2023 & \multirow{3}{10cm}{Flashloan functions lacked reentrancy guards and checked repayment by contract balance only, enabling attackers to register deposits made in reentrancy as repayment.} \\
+        \cline{2-3}
+         & 0x0 Attack & Oct 27, 2023 & \\
+        \cline{2-3}
+         & DFX Finance Attack & Nov 10, 2022 & \\
+        \hline
+        \hyperref[case-study:3]{3} & Predy Finance Attack & May 14, 2024 & Reentrancy used as a feature, allowing callers to reenter \lstinline$PredyPool$ via a custom callback function and move funds with the \lstinline$take$ function. But the failure to check each individual pair's balance led to a successful attack. \\
+        \hline
+        \hyperref[case-study:4]{4} & Revest Finance Attack & Mar 27, 2022 & Stale \lstinline$FNFTHandler.fnftsCreated$ variable enabled reentrancy during minting, allowing attackers to overwrite data of newly minted FNFTs. \\ 
+        \hline
+        \hyperref[case-study:5]{5} & Omni Protocol Attack & Jul 10, 2022 & Bypassed collateral checks in \lstinline$withdrawERC721$ by manipulating configurations through a reentrant call, allowing withdrawal of NFTs still used as collateral. \\
+        \hline
+        \hyperref[case-study:6]{6} & BNB Brokers Rug Pull & Apr 27, 2022 & \multirow{2}{10cm}{Suspected rug pull: used reentrancy backdoor to drain the contract's funds, followed by deactivation of social media and shutdown of project websites.} \\
+        \cline{2-3}
+         & Barley Finance Rug Pull & Jan 28, 2024 & \\
+        \hline
+        \hyperref[case-study:7]{7} & GoodDollar Attack & Dec 26, 2023 & Public accessibility of an privileged function allowed the attacker to exploit reentrancy to simulate interest collection, causing artificial appreciation of G\$X tokens. \\
+        \hline
+        \hyperref[case-study:8]{8} & Curve Attack & Jul 30, 2023 & Bug in the Vyper compiler invalidated its build-in reentrancy guard, rendering Curve vulnerable to price manipulation reentrancy attack. \\
+        \hline
+        \hyperref[case-study:9]{9} & Terra Attack & Jul 31, 2024 & Mishandled timeout message in Terra's IBC implementation enabled attackers to mint additional legitimate tokens at no cost. \\
+        \hline
+    \end{tabular}
+\end{footnotesize}
+    \vspace{-4mm}
+    \label{tab:1}
+\end{table*}
+\egroup

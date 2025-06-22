@@ -1,0 +1,51 @@
+\section{Background}
+
+\subsection{Ethereum and Smart Contracts}
+Blockchain technology enables decentralized, transparent record-keeping by distributing data across a network of nodes. Ethereum~\cite{ethereum-whitepaper}, a pioneering blockchain platform, introduced \textit{smart contracts} to support decentralized applications (DApps). Ethereum's success spurred the emergence of other EVM-compatible blockchains, fostering a dynamic ecosystem. Metrics such as \textit{market capacity} (total value of minted cryptocurrencies) and \textit{total value locked} (TVL, assets staked in DeFi platforms) are commonly used to gauge adoption~\cite{coingecko}.
+
+Smart contracts on EVM-compatible chains are inherently transparent, with their compiled EVM bytecode permanently stored on-chain. Many developers enhance transparency via \textit{source code verification}, publishing source code matched to deployed bytecode, which is accessible through blockchain explorers like Etherscan~\cite{etherscan}.
+
+\vspace{-3mm}
+\subsection{The DeFi Ecosystem}
+\vspace{-1mm}
+
+\textbf{Tokens} are the foundational assets of DeFi, representing various utilities, values, or rights. They are broadly categorized as native tokens (\eg ETH on Ethereum, POL on Polygon) and standardized tokens such as ERC20~\cite{erc20}, which facilitate fungible asset creation. Other standards—ERC777~\cite{erc777}, ERC721~\cite{erc721}, and ERC1155~\cite{erc1155}—extend support for non-fungible and hybrid tokens~\cite{erc777,erc721,erc1155}.
+
+\textbf{Exchanges} are critical infrastructure for token liquidity and trading. Centralized exchanges (CEXs) are managed platforms matching buyers and sellers via order books, often facilitating fiat-crypto exchanges. In contrast, decentralized exchanges (DEXs) operate without intermediaries, relying on smart contracts and automated market maker (AMM) protocols (\eg Uniswap, Curve) to determine prices dynamically. This model supports continuous and trustless trading.
+
+\textbf{Flashloans} are another DeFi hallmark, allowing users to borrow assets without collateral, provided repayment occurs within the same transaction. This atomicity enables advanced strategies like arbitrage and liquidation while ensuring lender safety. However, flashloans are also a frequent vector for exploits, including reentrancy attacks and price manipulation.
+
+\input{multimedias/reentrancy-example-code}
+
+\subsection{Reentrancy Attacks}
+\label{background:reentrancy-attacks}
+
+Reentrancy attacks constitute a significant and well-documented class of vulnerabilities in smart contracts. They were ranked as the top vulnerability of smart contracts as per the OWASP classification until 2024, and are in the top five vulnerabilities in 2025~\cite{top-smart-contract-attacks, top-smart-contract-attacks-2025}.
+
+Listing \ref{listing:reentrancy-example} provides a concrete example of a reentrancy vulnerability and its exploitation. In this instance, the \lstinline{Victim} contract updates the caller's balance \textit{after} transferring the requested Ether (ETH) via the \lstinline{call} function.  This sequence triggers the \lstinline{fallback} function within the \lstinline{Attacker} contract \textit{before} the balance update in \lstinline{Victim} is finalized, leading to a state inconsistency. By exploiting this inconsistency, the attacker can repeatedly invoke \lstinline{Victim.withdraw} to illicitly drain the \lstinline{Victim} contract's ETH reserves.
+
+To be more specific, the defining pattern of a reentrancy attacks can be formalized by the following formula:
+
+\vspace{-1.5mm}
+\begin{equation}
+V_1.f_{V_1} \rightarrow A.f_{A} \rightarrow V_2.f_{V_2} \label{def}
+\end{equation}
+
+where $V_1$ and $V_2$ represent victim contracts, $A$ denotes the attacker's contract, $f$ represents functions within the respective contracts, $.$ operator denotes membership relation, and the arrow ($\rightarrow$) signifies an invocation relationship, either direct or indirect. In essence, a reentrancy attack occurs when a vulnerable contract ($V_1$) calls a function ($f_A$) in an attacker's contract ($A$), which in turn calls back into a function ($f_{V_2}$) within a victim contract ($V_2$) before the initial execution ($V_1.f_{V_1}$) completes.
+
+A common classification scheme for reentrancy attacks is based on their \textit{scope}, a metric that characterizes the relationship between $f_{V_1}$ and $f_{V_2}$ in Formula \ref{def}. This includes:
+
+\begin{itemize}
+    \item \textbf{Single-function reentrancy}: $V_1 = V_2$, $f_{V_1} = f_{V_2}$; the same function is reentered.
+    \item \textbf{Cross-function reentrancy}: $V_1 = V_2$, $f_{V_1} \neq f_{V_2}$; distinct functions in the same contract.
+    \item \textbf{Cross-contract reentrancy}: $V_1 \neq V_2$; reentry targets a different contract.
+\end{itemize}
+
+We extend this classification to capture emerging behaviors:
+
+\begin{itemize}
+    \item \textbf{Cross-project reentrancy}: $V_1 \neq V_2$, and the contracts belong to different projects.
+    \item \textbf{Cross-chain reentrancy}: The invocation chain spans multiple blockchain networks.
+\end{itemize}
+
+Beyond the scope-based classification, another distinct category is \textbf{read-only reentrancy}, where $f_{V_2}$ is a \lstinline{view} function that only reads the contract state without modifying it. Such invocations are benign by themselves, but they may influence logic in subsequent operations, leading to evasive reentrancy attacks that are harder to detect.

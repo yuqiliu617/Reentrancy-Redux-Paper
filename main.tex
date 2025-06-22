@@ -1,0 +1,102 @@
+\documentclass[conference]{IEEEtran}
+
+% \IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{soul}
+\usepackage{tcolorbox}
+\usepackage{multirow}
+\usepackage[colorlinks,allcolors=blue]{hyperref}
+\usepackage[inline]{enumitem}
+\usepackage{subcaption}
+\usepackage[spaces,hyphens]{xurl}
+\usepackage{float}
+
+
+\input{includes/solidity-highlighting}
+\input{includes/commands}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\authornote}[3][Black]{
+    \leavevmode\unskip\raisebox{-3.5pt}{\rlap{$\scriptstyle\diamond$}}%
+    \marginpar{
+        \raggedright\hbadness=10000
+        \def\baselinestretch{0.8}\tiny
+        \it \color{#1} #2: #3\par
+    }
+}
+\newcommand{\karthik}[1]{\authornote{KP}{#1}}
+\newcommand{\karthiksolved}[1]{\authornote[Green]{KP: #1}}
+\newcommand{\rui}[1]{\authornote[Brown]{R}{#1}}
+\newcommand{\ruisolved}[1]{\authornote[Green]{R: #1}}
+\newcommand{\yuqi}[1]{\authornote[Cyan]{YL}{#1}}
+
+\begin{document}
+
+\title{Reentrancy Redux: The Evolution of Real-World Reentrancy Attacks on Blockchains}
+
+\author{
+    \IEEEauthorblockN{Yuqi Liu}
+    \IEEEauthorblockA{
+        \textit{University of British Columbia}\\
+        yuqil@ece.ubc.ca
+    }
+    \and
+    \IEEEauthorblockN{Rui Xi}
+    \IEEEauthorblockA{
+        \textit{University of British Columbia}\\
+        xirui801@ece.ubc.ca
+    }
+    \and
+    \IEEEauthorblockN{Karthik Pattabiraman}
+    \IEEEauthorblockA{
+        \textit{University of British Columbia}\\
+        karthikp@ece.ubc.ca
+    }
+}
+
+\maketitle
+
+\begin{abstract}
+Reentrancy attacks remain a persistent threat to blockchain smart contracts today, causing significant financial losses despite numerous defense mechanisms. This paper presents a comprehensive analysis of \ReentrancyTotalAnalyzed{} real-world reentrancy attacks on EVM-compatible blockchains from 2016 to 2024, investigating the factors contributing to their continued prevalence. Through integrated qualitative and quantitative analyses, we identify key trends in exploited vulnerabilities, track the evolution of attacker techniques, and expose a widening gap between academic research and real-world practice. Our findings reveal that reentrancy attacks are more diverse and sophisticated than previously understood, frequently involving complex interactions across multiple contracts, projects, and even blockchains. Critically, we highlight how attackers are adapting to bypass traditional detection and defense techniques. This research provides crucial insights into the evolving threat landscape, challenges outdated assumptions, and offers practical guidelines for developing more robust and effective reentrancy defenses.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Reentrancy, Smart Contract Vulnerability, Ethereum, Real-World Attacks, Blockchain Security
+\end{IEEEkeywords}
+
+\everypar{\looseness=-1}
+
+\input{sections/Introduction}
+
+\input{sections/Background}
+
+\input{sections/Related Work}
+
+\input{sections/Methodology}
+
+\input{sections/Qualitative Analysis}
+
+\input{sections/Quantitative Analysis}
+
+\input{sections/Discussion}
+
+\input{sections/Conclusion}
+
+\input{sections/Acknowledgement}
+
+%\rui{For all the web reference, put it to Wayback Machine. See slack msg.}
+\bibliographystyle{IEEEtran}
+\bibliography{reference}
+
+\end{document}

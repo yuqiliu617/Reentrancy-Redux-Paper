@@ -1,0 +1,66 @@
+\section{Qualitative Analysis}
+
+We conducted a qualitative analysis of reentrancy attacks and extracted high-level insights and characteristics. Each case study highlights one or more attacks that illustrate these insights and characteristics.
+
+
+\subsection{Recurrent Simple Pattern}
+\label{recurrent-simple-pattern}
+
+Though often viewed as a classic or outdated vulnerability, reentrancy remains a significant threat, with its simplest form still exploited in modern DApps. Since first appearing on Ethereum in 2016, such attacks have typically followed a straightforward pattern: the victim contract uses \lstinline{call.value} to transfer ETH to the caller, triggering the caller's \lstinline{fallback} function before updating the balance. While techniques have grown more sophisticated over time, basic variants of this attack continue to appear.
+
+\textbf{Case Study 1:} \label{case-study:1} On February 12, 2024, a reentrancy attack on the Web3 game ChainPaint resulted in a \$52.5K ETH loss. The vulnerability resided in the game's auction system, where participants updated bids via \lstinline{Auction.makeBid}. This function first refunded the previous bid using \lstinline{call.value}, then updated the bid to the new amount. By placing a higher bid and exploiting their contract's \lstinline{fallback} function, the attacker recursively reentered \lstinline{Auction.makeBid}, draining all accumulated bids.
+
+
+\subsection{Callback as a Design Feature}
+\label{callback-as-a-design-feature}
+
+While most victim contracts inadvertently invoke attacker-controlled functions, an increasing number of recent projects explicitly provide custom callback hooks—either for specific business logic or programming flexibility. However, such practices can lead to false positives in existing detection tools~\cite{rethinking-of-reentrancy}.
+
+A prominent example is flashloan. Although reentrancy into a flashloan provider's contract is generally unintended, the business logic of flashloans inherently requires transferring control to the caller, making external calls a core part of the process. To mitigate this risk, most flashloan providers implement reentrancy guard. Nevertheless, some developers neglect this critical measure, leaving contracts vulnerable.
+
+\textbf{Case Study 2:} \label{case-study:2} Peapods Finance (December 23, 2023), 0x0 (October 27, 2023), and DFX Finance (November 10, 2022) suffered reentrancy attacks due to unprotected flashloan functions. These contracts lacked effective reentrancy guards and verified repayments merely through balance checks. Exploiting this flaw, attackers \emph{deposited} the borrowed tokens back into the contract during reentrancy, rather than \emph{repaying} them. As a result, the contracts both credited the attackers' accounts and cleared their debts—allowing the same tokens to serve as both repayment and deposit, enabling free withdrawals.
+
+Some developers have taken this practice further, not only providing custom callback hooks but also designing functions intended to be reentered to accommodate their business logic.
+
+\textbf{Case Study 3:} \label{case-study:3} On May 14, 2024, Predy Finance was exploited in a reentrancy attack, losing \$460K in tokens. This case illustrates the risks of mismanaging reentrancy as a feature. Predy Finance introduced a custom callback hook, \lstinline{predyAfterTradeCallback}, invoked after token transfers in \lstinline{PredyPool.trade}. Additionally, it offered \lstinline{PredyPool.take}, a deliberately reenterable function allowing arbitrary token transfers. Although intended for legitimate use, inadequate safeguards on token pair registration allowed attackers to target and exploit tokens belonging to other users.
+
+
+\input{multimedias/qualitative-table}
+
+
+\subsection{Indirect State Variables}
+
+A universal trait of reentrancy attacks is the manipulation of state variables before they are properly updated. These typically involve accounting variables such as balances, debts, or token supply. As a result, developers often focus on securing these financial states. However, in some cases, variables that appear unrelated can indirectly affect accounting logic through subtle contract interactions, leading to significant losses.
+
+\textbf{Case Study 4:} \label{case-study:4} On March 27, 2022, Revest Finance was exploited in a reentrancy attack, losing \$2.01M. The vulnerable variable was not tied to balances but tracked the number of minted NFTs (\lstinline{FNFTHandler.fnftsCreated}). This ID counter is incremented only after minting is complete. The attacker exploited reentrancy through \lstinline{onERC1155Received}—triggered after the FNFT was transferred—while the counter remained stale. The functions involved, \lstinline{Revest.mintAddressLock} and \lstinline{Revest.depositAdditionalToFNFT}, are designed to mint new FNFTs and allow users to deposit additional tokens to an existing FNFT, respectively. During reentrancy, the stale counter caused the same ID to be assigned, overwriting the FNFT's data—including associated RENA token amounts—and resulting in substantial loss.
+
+\textbf{Case Study 5:} \label{case-study:5} On July 10, 2022, Omni Protocol suffered a \$1.4M exploit. As with Revest, the critical variable was not a direct financial balance. The vulnerability lay in \lstinline{Pool.withdrawERC721}, which returns ERC721 NFTs supplied by users. NFTs could also be used as collateral to borrow tokens, so \lstinline{SupplyLogic.executeWithdrawERC721} validated that users retained sufficient collateral post-withdrawal. This check, however, occurred after the NFT transfer and relied on \lstinline{userConfig.isUsingAsCollateral}. Because ERC721 includes the \lstinline{onERC721Received} post-transfer hook, the attacker used it to invoke \lstinline{Pool.liquidationERC721}, manipulating the collateral status and bypassing validation, leading to unauthorized withdrawals eventually.
+
+
+\subsection{Reentrancy for Rug Pulls}
+
+While most reentrancy attacks are attributed to external hackers, we suspect that some are orchestrated by smart contract developers themselves.
+``Rug pull'' is an act by developers in which they misappropriate users' investments~\cite{rug-pull-report}. 
+
+Although it is often difficult to conclusively classify an incident as a rug pull, some cases raise strong suspicion. Two notable examples suggest that developers may have deliberately introduced reentrancy vulnerabilities—an assessment corroborated by other blockchain security firms.
+
+\textbf{Case Study 6:} \label{case-study:6} BNB Brokers and Barley Finance were attacked on April 27, 2022, and January 28, 2024, respectively. The BNB Brokers exploit followed the pattern of The DAO hack, while Barley Finance suffered from an unprotected flashloan vulnerability. In both cases, the projects' social media accounts were abruptly deleted, their websites taken offline, and no further transactions occurred on the affected contracts. These suspicious behaviors suggest premeditated rug pulls by the developers~\cite{bnb-brokers-newsletter, attack-report:barley-finance}.
+
+
+\input{multimedias/quantitative-figures-1}
+
+\subsection{Insufficient Access Control}
+\label{qualitative:insufficient-access-control}
+
+As the DeFi ecosystem evolves, inter-contract interactions and modular programming practices have become increasingly common. To facilitate manual administration and interactions with other contracts, certain functions are often declared as \lstinline{public} or \lstinline{external}. While many developers implement whitelist mechanisms to restrict access to sensitive administrative functions, others either overlook this critical safeguard or opt for greater flexibility at the expense of security. Consequently, some contracts become vulnerable to reentrancy attacks with impersonation strategies (see \ref{attack-strategy:impersonation}).
+
+\textbf{Case Study 7:} \label{case-study:7} On December 26, 2023, GoodDollar experienced a sophisticated cross-contract price manipulation attack, resulting in a \$630K loss. The attacker targeted the \lstinline{GoodFundManager.collectInterest} function, originally intended for developers to collect interest from staking the contract's DAI balance in pre-configured farms. This interest would be deposited into Compound to obtain cDAI, which would then be added to GoodDollar's pool, minting G\$X tokens. While the process was designed to slightly appreciate G\$X, the effect was minimal under normal conditions. However, because \lstinline{collectInterest} was declared public, it was accessible to anyone, including the attacker. Through reentrancy, the attacker deposited a large amount of cDAI, deceiving the contract into treating it as interest income—artificially inflating G\$X's value. The attacker then sold G\$X tokens acquired before the manipulation to realize the profit.
+
+
+\subsection{Vulnerable Infrastructure}
+
+While reentrancy vulnerabilities often arise from flaws in smart contracts, such as the victim contracts or their dependencies, they can also stem from bugs in the infrastructure.
+
+\textbf{Case Study 8:} \label{case-study:8} On July 30, 2023, Curve, one of Ethereum's leading DEXs, was exploited in a reentrancy attack that resulted in \$60.7M in losses~\cite{attack-report:curve}. The attacker invoked \lstinline{add_liquidity} during the execution of \lstinline{remove_liquidity}, before the attacker's balance and the pool's total supply were updated—a tactic seen in early attacks on Curve-like protocols. Notably, Curve's developers had implemented reentrancy guards for these functions, but a bug in the Vyper compiler rendered them ineffective. This vulnerability coincided with Curve's deployment of an upgraded contract compiled using the affected Vyper version~\cite{vul-report:vyper}.
+
+\textbf{Case Study 9:} \label{case-study:9} On July 31, 2024, the Terra Network suffered a \$4.58M reentrancy exploit~\cite{attack-report:terra}. The vulnerability was rooted in Terra's implementation of the Inter-Blockchain Communication (IBC) protocol, which enables cross-chain interactions such as wrapped token bridging. The attacker recursively triggered \lstinline{MsgTimeout} to exploit a flaw in the protocol's timeout logic, causing the blockchain to mint additional tokens without asset backing. This incident remains the only documented example of cross-chain reentrancy.

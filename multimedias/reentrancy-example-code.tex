@@ -1,0 +1,36 @@
+\lstset{numbers=left,xleftmargin=2em,frame=single,framexleftmargin=2em}
+
+\begin{figure}[H]
+\vspace{-4mm}
+\begin{footnotesize}
+\begin{lstlisting}[language=Solidity,caption={Reentrancy example},label={listing:reentrancy-example}]
+contract Victim {
+    mapping(address => uint256) public blc;
+    function withdraw(uint256 _amount) public {
+        require(_amount <= blc[msg.sender]);
+        // Transfer ETH to the caller
+        msg.sender.call{value: _amount}();
+        // Update the caller's balance
+        blc[msg.sender] -= _amount;
+    }
+}
+contract Attacker {
+    Victim private vic;
+    address private owner;
+    // Used to initiate the attack
+    function attack() public {
+        require(msg.sender == owner);
+        vic.withdraw(vic.blc(address(this)));
+        owner.transfer(this.balance);
+    }
+    fallback() external payable {
+        uint256 v = vic.blc(address(this));
+        if (address(vic).balance >= v)
+            // Reenter victim to drain its ETH
+            vic.withdraw(v);
+    }
+}
+\end{lstlisting}
+\end{footnotesize}
+\vspace{-6mm} % Adjust the value as needed to reduce space after the figure
+\end{figure}

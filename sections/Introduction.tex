@@ -1,0 +1,54 @@
+\section{Introduction}
+
+Blockchain technology is a decentralized, transparent ledger system designed for secure and immutable record-keeping. Among various networks, Ethereum~\cite{ethereum-whitepaper} introduced \textit{smart contracts}—self-executing programs deployed on-chain to automate transactions and agreements. However, as smart contracts have become prevalent, their security vulnerabilities have also grown~\cite{top-smart-contract-attacks, top-smart-contract-attacks-2025}, leading to billions of dollars in financial losses.
+
+Reentrancy attacks are among the most prevalent and well-documented smart contract vulnerabilities~\cite{top-smart-contract-attacks}. They occur when a malicious contract \(X\) calls another contract \(Y\), which then invokes a callback into \(X\) before updating its own state. Exploiting this inconsistency, \(X\) can manipulate interactions to deceive \(Y\) into unintended behaviors, often resulting in fund loss. At least \ReentrancyTotalNumber{} reentrancy attacks are recorded on Ethereum Virtual Machine (EVM) compatible blockchains~\cite{reentrancy-list-pcaversaccio,blocksec-security-incidents,slowmist-hacked}.
+
+While there are many tools for detecting reentrancy attacks, they face intrinsic limitations. For instance, Oyente~\cite{oyente} applies overly general patterns, leading to high false positives~\cite{survey:static-analysis}; Slither~\cite{slither} restricts its focus to Ether transfers, missing vulnerabilities in ERC-20 token transactions; and dynamic detectors like Sereum~\cite{sereum} require modifications to the underlying infrastructure, limiting their practical deployment. As a result, reentrancy attacks remain an active and serious threat.
+
+% Why specifically do we focus on reentrancy?
+This study focuses specifically on reentrancy attacks for three key reasons. First, they are among the earliest and most widely recognized smart contract vulnerabilities, consistently ranked as a top concern within the blockchain community~\cite{top-smart-contract-attacks}. Numerous educational resources have been developed to help developers avoid them~\cite{solidity-security-considerations,checks-effects-interactions}. Second, the widespread attention has led to diverse static and dynamic detection efforts. Third, reentrancy vulnerabilities often do not act in isolation, but rather in conjunction with other vulnerabilities, amplifying their combined effect. Studying this attack class offers valuable insights into the evolving dynamics between attackers and defenders in blockchain ecosystems, while also helping us to minimize the variability in our analysis.
+
+% How does our work differ from prior studies?
+Most prior studies on reentrancy were conducted before 2020, when few reentrancy attacks had occurred in the wild. Therefore, these studies often rely on incomplete or outdated assumptions. While some recent papers~\cite{attack-contract-detection,turn-the-rudder} acknowledge more incidents, they lack depth and fail to comprehensively analyze broader trends. Additionally, most papers focus on specific tools or techniques, and do not provide a holistic perspective on reentrancy attacks and their consequences.
+
+In this paper, we present a large-scale empirical study of real-world reentrancy attacks across multiple EVM-compatible blockchains. Our goal is to classify and analyze the types and characteristics of these attacks, while critically examining assumptions from prior research. To this end, we analyze \ReentrancyTotalAnalyzed{} real-world incidents, compiled from industry and community sources, using both qualitative and quantitative approaches. Our qualitative analysis distills insights from notable cases that challenge established views, while our quantitative analysis examines trends across multiple dimensions including blockchain platform, fund loss, reentrancy scope, entry point, attack strategy, vulnerability origin, and attack timeline.
+
+To our knowledge, this is the first comprehensive, in-depth investigation of real-world reentrancy attacks across multiple blockchains. By integrating qualitative and quantitative methods, we:
+\begin{enumerate*}
+    \item explore diverse attack characteristics,
+    \item trace the evolution of attacker strategies,
+    \item expose gaps between academic research and practice, and
+    \item propose a framework for understanding and classifying reentrancy attacks.
+\end{enumerate*}
+
+This work thus serves as a vital resource for researchers and developers, providing insights into the evolving threat landscape. %By challenging outdated assumptions and contextualizing the ongoing arms race between attackers and defenders, we contribute actionable guidance for future efforts in blockchain security. 
+Our study's comprehensive approach—combining large-scale data analysis with detailed case studies—yields a unique perspective not found in prior research.
+
+% Contributions and interesting findings
+Our key contributions are as follows:
+
+\begin{itemize}
+    \item \textbf{Comprehensive Empirical Analysis:} We analyze \ReentrancyTotalAnalyzed{} real-world reentrancy attacks, spanning all publicly documented incidents from 2016 to 2024. This extensive dataset allows us to derive robust insights into various attack characteristics and their evolution.
+    \item \textbf{Multi-Dimensional Trend Analysis:} We compile comprehensive statistics on these attacks, uncovering trends across seven critical dimensions:
+    \begin{enumerate*}
+        \item blockchain network,
+        \item reentrancy scope,
+        \item entry point,
+        \item fund loss,
+        \item attack strategy,
+        \item vulnerability origin, and
+        \item attack timeline
+    \end{enumerate*}
+    This multi-dimensional approach provides a holistic view of the reentrancy attack landscape.
+    \item \textbf{Novel Attack Classification:} We categorize the attack flow of each incident into distinct classes based on attacker strategies, offering a systematic and novel perspective on reentrancy methodologies.
+    \item \textbf{Bridging the Research-Practice Gap:} We critically assess assumptions in existing reentrancy detection research, highlighting discrepancies with real-world attacks and their practical implications. This assessment directly informs our guidelines for future research, ensuring greater relevance and applicability in practice.
+\end{itemize}
+
+Our principal findings are summarized below:
+\begin{itemize}
+    \item \textbf{Evolved Threats:} Reentrancy attacks have significantly evolved beyond early patterns. Cross-function reentrancy is now prevalent, leveraging diverse entry points (\eg malicious tokens, ERC hooks) and sophisticated strategies, with price manipulation being the most common. Higher-scope attacks (cross-contract/project/chain) represent a growing, non-negligible threat.
+    \item \textbf{Persistent \& Rapid Exploitation:} Despite defenses, attacks remain frequent (over 1.5 incidents/month since mid-2021), primarily targeting high-value blockchains. Vulnerabilities are often exploited rapidly, sometimes within days of contract deployment, with attackers increasingly deploying malicious contracts within the exploit transaction itself to evade preemptive detection.
+    \item \textbf{Dual Nature \& Origins:} The increasing use of reentrancy as an intended design pattern for flexibility complicates detection. However, it is also exploited as a backdoor in malicious schemes (e.g., rug pulls) and vulnerabilities often stem from inheriting flaws via forking popular open-source protocols.
+    \item \textbf{Financial Impact Trends:} While individual incident losses vary greatly and can be substantial, the average loss has shown a decline since mid-2022, potentially indicating increased attacker competition or improved (though still imperfect) defensive postures.
+\end{itemize}

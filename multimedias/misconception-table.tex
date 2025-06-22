@@ -1,0 +1,26 @@
+\bgroup
+\def\arraystretch{1.5}
+\begin{table*}[htbp]
+    \centering
+    \caption{Myths and Realities about Reentrancy Attacks, plus the Implications for Detection Techniques}
+    \begin{footnotesize}
+    \begin{tabular}{|p{1.0cm}|p{2.9cm}|p{3.2cm}|p{9.1cm}|}
+        \hline
+        \textbf{Section} & \textbf{Myth} & \textbf{Reality} & \textbf{Explanation} \\
+        \hline
+        \ref{quantitative:entry-point} \ref{quantitative:fund-loss} \ref{quantitative:attack-timeline} & They decrease  because of the wide adoption of reentrancy guard~\cite{verheijke2022exploratory}. & They remain prevalent to this day of writing. & After the DAO attack, reentrancy attacks ceased for over two years. Following the SpankChain attack (Oct 19, 2018)~\cite{attack-report:spankchain}, another 1.5 years passed without incidents. However, reentrancy attacks surged in mid-2021 and have persisted at a rate of 1.5 incidents per month on average ever since (see Figure~\ref{fig:entry-point},~\ref{fig:fund-loss},~\ref{fig:attack-timeline}). \\
+        \hline
+        \ref{quantitative:entry-point} & They only target the \lstinline|fallback| function \cite{smart-contract-security-field-guide}. & \nohyphen{They utilize various entry points~\cite{immunefi-ultimate-guide}.} & While the DAO attack used the \lstinline|fallback| function, modern attacks target malicious tokens, ERC hooks, and application-specific hooks. The \lstinline|fallback| function accounts for only 30.4\% of analyzed attacks. \\
+        \hline
+        \ref{quantitative:entry-point} & They only exploit native tokens and fungible tokens \cite{rahimian2021tokenhook, nelaturu2022correct}. & They also target other types of tokens, including NFTs and hybrid tokens. & Although most attacks involve fungible tokens, NFTs such as CreatureToadz~\cite{attack-report:creature-toadz} and HypeBeans~\cite{attack-report:hype-beans}, along with hybrid tokens~\cite{attack-report:revest-finance}, have also been exploited. \\
+        \hline
+        \ref{quantitative:attack-strategy} & They all involve recursive withdrawal~\cite{smart-contract-security-field-guide}. & Reentrant (recursive) withdrawal is only one of many strategies attackers used. & The first two reentrancy attacks before 2020 did use reentrant withdrawal. However, the third attack (imBTC on April 18, 2020~\cite{attack-report:imbtc}) applied a different one: price manipulation. Our analysis identifies seven distinct attack strategies. \\ 
+        \hline
+        \ref{callback-as-a-design-feature} & Reentrancy is inherently malicious \cite{reddit-disable-reentrant-behavior}. & Reentrancy can also be legitimate. & Reentrancy is a common pattern that could be used to support modular and flexible designs. This is increasingly prevalent with the rise of cross-contract interactions, especially after the adoption of proxy contracts for upgradability. \\
+        \hline
+    \end{tabular}
+    \end{footnotesize}
+    \vspace{-5mm}
+    \label{tab:2}
+\end{table*}
+\egroup

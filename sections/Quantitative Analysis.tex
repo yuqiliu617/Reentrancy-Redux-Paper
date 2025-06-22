@@ -1,0 +1,145 @@
+\section{Quantitative Analysis}
+
+This section presents a quantitative analysis of the \ReentrancyTotalAnalyzed{} reentrancy attacks collected (sources detailed in Section~\ref{methodology:data-collection}). The analysis focuses on seven key dimensions, chosen for consistent data availability and relevance to understanding attack characteristics\footnote{Not all dimensions include data for every incident. \eg the Iron Finance attack~\cite{attack-report:iron-finance} lacked a corresponding reentrancy transaction.}:
+\begin{enumerate*}
+    \item blockchain network,
+    \item reentrancy scope,
+    \item entry point,
+    \item fund loss,
+    \item attack strategy,
+    \item vulnerability origin, and
+    \item attack timeline.
+\end{enumerate*}
+We chose these dimensions to maximize the comprehensiveness of the analysis. 
+
+
+\subsection{Blockchain Network}
+\label{quantitative:blockchain-network}
+
+As of this writing, 1,136 EVM-compatible blockchains exist~\cite{chainlist}, with seven networks each boasting a Total Value Locked (TVL) exceeding \$1 billion~\cite{coingecko}. This number continues to grow. Figure~\ref{fig:blockchain-network} illustrates the distribution of reentrancy attacks across blockchain networks (outer ring)\footnote{The sum of the percentages exceeds 100\% because some attacks occurred on multiple chains.}, alongside the relative TVLs of those chains (inner ring).
+
+Despite blockchain proliferation, reentrancy attacks remain predominantly concentrated on Ethereum (52.7\% of documented incidents). BNB Smart Chain, Polygon, and Arbitrum are also frequent targets (18.9\%, 9.5\%, and 9.5\%, respectively). This distribution strongly correlates with network TVL, supporting the hypothesis that attackers prioritize high-value targets for greater potential financial rewards. We also examined the total number of contracts deployed~\cite{contracts-deployment-stats} per blockchain but found no correlation with attack frequency.
+
+\insightbox{Blockchain Network}{Reentrancy attacks are heavily concentrated on high-value networks, particularly those with substantial TVL. Ethereum alone accounts for more than half (52.7\%) of all documented incidents.}
+
+
+\subsection{Reentrancy Scope}
+\label{quantitative:reentrancy-scope}
+
+Attack scope refers to the functional boundaries involved in the exploit (see Section~\ref{background:reentrancy-attacks}). Figure~\ref{fig:reentrancy-scope} illustrates the distribution of attacks by scope. Early attacks were predominantly single-function, but as defensive mechanisms evolved, attackers increasingly adopted broader scopes. This shift is evident as cross-function reentrancy has surpassed single-function reentrancy, now accounting for 42.3\% of recorded attacks, compared to 36.6\% for single-function incidents. Conversely, cross-contract and cross-project reentrancy, despite their academic prominence, constitute only 21.1\% of cases.
+
+These findings also underscore a critical gap in developer awareness, as single-function and many cross-function vulnerabilities can be effectively mitigated using reentrancy guard (see Section~\ref{discussion:mitigation}).
+
+\insightbox{Reentrancy Scope}{Cross-function and single-function reentrancy attacks dominate the landscape, comprising 42.3\% and 36.6\% of all recorded attacks respectively. Comparably, higher-scoped reentrancy attacks are notable but less common.}
+
+
+\subsection{Entry Point}
+\label{quantitative:entry-point}
+
+The entry point of a reentrancy attack refers to the function within the attacker's contract that is invoked by the victim contract during exploitation. This function typically contains the core reentrancy logic.
+
+Based on the function's nature and associated token standards, we classify them into four types:
+\begin{enumerate}
+    \item \textbf{Fallback:} The contract's default function, triggered when no function signature is specified or matched.
+    \item \textbf{Malicious Token:} Standard ERC-20 functions (\eg \lstinline{transfer}, \lstinline{transferFrom}, \lstinline{approve}) within custom tokens controlled by attackers.
+    \item \textbf{ERC Hook:} Callback functions defined by standards such as ERC-721, ERC-777, and ERC-1155, automatically invoked before or after token transfers.
+    \item \textbf{Application Hook:} Non-standard callback functions implemented by specific projects to support custom logic.
+\end{enumerate}
+
+The use of these entry points has evolved over time, as shown in Figure~\ref{fig:entry-point}. Early attacks mainly exploited the \lstinline{fallback} function, typically triggered during native token transfers via \lstinline{call.value}, \lstinline{transfer}, or \lstinline{send}. Among these, only \lstinline{call.value} enables reentrancy, due to the 21,000 gas limitations imposed on the other two. Consequently, most early detection efforts focused on this pattern, which has since been recognized as a limitation~\cite{turn-the-rudder,attack-contract-detection}.
+%
+Although the \lstinline{fallback} remains relevant (see Section~\ref{recurrent-simple-pattern}), attackers have increasingly employed malicious tokens since around 2020, especially against platforms supporting arbitrary token registration. In parallel, ERC-defined transfer hooks became popular vectors. By late 2022, application-specific hooks had emerged as a notable trend.
+
+Overall, \lstinline{fallback} and ERC hooks are the most frequently exploited, accounting for 29.6\% and 28.2\% of cases, respectively. Application hooks and malicious tokens make up 24.0\% and 18.3\%, respectively.
+
+\insightbox{Entry Point}{Reentrancy attack entry points have diversified over time—from \lstinline{fallback} functions to malicious tokens, ERC hooks, and project-specific application hooks. Despite this shift, \lstinline{fallback} and ERC hooks remain the most dominant, each involved in nearly 30\% of incidents.}
+
+
+\subsection{Fund Loss}
+\label{quantitative:fund-loss}
+
+Fund loss refers to the market value of stolen tokens at the time of the attack (stolen amount $\times$ token price). While a practical approximation, this estimate doesn't capture full victim impact (\eg token depreciation, loss of investor confidence) nor does it equal attacker profit, which is reduced by costs (\eg DEX fees, flashloans) and liquidity constraints when converting large amounts of stolen tokens.
+
+\fig[0.48]{fund-loss}{Fund loss}
+
+Figure~\ref{fig:fund-loss} illustrates the fund losses from reentrancy attacks over time (white-hat attacks are excluded from this figure). Among the analyzed incidents, losses range from under \$1K (0x0 attacks) to nearly \$80M (Fei Protocol attack). For comparison, the DAO attack caused losses of around \$60M. However, due to the Ethereum hard fork that ensued, the attacker's realized profit was substantially lower~\cite{the-dao-analysis}.
+
+Despite the ongoing prevalence of reentrancy attacks on EVM-compatible blockchains, the average fund loss per incident has exhibited a steady downward trend since their emergence. Similarly, aggregate monthly losses plateaued and began declining after mid-2022. A brief spike in mid-2023—primarily due to an exceptionally high-value attack on Curve~\cite{attack-report:curve}—does not contradict the overall downward trajectory. While the precise causes of this decline remain uncertain, likely contributing factors include:
+\begin{enumerate*}
+    \item increased competition among attackers, 
+    \item improved security awareness among developers, and 
+    \item the rapid expansion of the smart contract ecosystem, which may dilute the average market value per project.
+\end{enumerate*}
+
+\insightbox{Fund Loss}{Reentrancy attacks result in highly variable losses, from under \$1K to \$80M. Since mid-2022, average losses have steadily declined, indicating a notable reduction in the financial impact of these attacks over time.}
+\vspace{-0.5mm}
+
+
+\input{multimedias/quantitative-figures-2}
+
+\subsection{Attack Strategy}
+\label{quantitative:attack-strategy}
+
+%The majority of academic research on reentrancy has focused on identifying vulnerabilities in victim contracts, with 
+Researchers have paid limited attention to the strategies employed by attackers. 
+While Huang \etal~identified common patterns in attack contracts~\cite{attack-contract-detection} and Chen \etal~ classified real-world attacks into three categories~\cite{turn-the-rudder}, these studies do not provide a comprehensive examination of attack flows.
+
+In our analyses, we identified seven distinct strategies, offering a more granular understanding of attackers' methodologies and approaches. These strategies represent key insights into how the attackers have profited from the vulnerabilities. Figure~\ref{fig:attack-strategy} shows the distribution of reentrancy attacks based on the attack strategy. The three most dominant strategies comprise 74.3\% of all attacks, while strategies like \textit{Impersonation} only account for few cases. Details of each strategy are described below, in decreasing order of their prevalence. 
+
+\textbf{Price Manipulation:}
+\label{attack-strategy:price-manipulation}
+Similar to market manipulation in traditional finance, blockchain speculators seek to profit by influencing token prices. While standard market tactics often require multiple trades over time, reentrancy vulnerabilities provide attackers with a streamlined approach. Leveraging flashloans to amass the necessary capital and exploit such vulnerabilities in a single transaction, the attackers can bypass the usual risks of speculative trading.
+Most price manipulation attacks exploit stale variables involved in price calculations, resulting in dramatic token value swings. For example, during the Jaypeggers attack, the JAY token depreciated by 99.3\% mid-attack~\cite{attack-report:jaypeggers}, a level of manipulation rarely seen in traditional markets. Notably, price manipulation reentrancy was the sole strategy in all cross-project reentrancy cases.
+
+\textbf{Reentrant Withdrawal:}
+Reentrant withdrawal occurs when attackers recursively withdraw funds deposited in a target contract, typically due to the failure to implement the checks-effects-interactions pattern (see Section~\ref{discussion:mitigation}). %The DAO attack exemplifies this strategy. 
+Although the frequency of reentrant withdrawals has declined in recent years, as discussed in Section~\ref{recurrent-simple-pattern}, the strategy remains relevant. It accounts for 14 attacks in our dataset and is the second most common reentrancy technique.
+
+\textbf{Balance Deception:}
+In this strategy, attackers exploit insufficient balance verification mechanisms in DeFi contracts. Post-transfer balance checks are manipulated to deceive contracts into believing conditions have been met, allowing attackers to siphon funds. One common scenario is flashloan providers failing to implement reentrancy guard on their deposit functions. Consequently, attackers can deposit the loan back to the providers in reentrancy and mislead the contracts into believing that they have received the repayment, as illustrated in Section~\ref{case-study:2}. 
+Another notable instance of this strategy is the Lendf.Me attack \cite{attack-report:lendf-me}, where \lstinline{MoneyMarket} calculates the new balance before the transfer but uses it after its \lstinline{supply} function, allowing the attacker to \lstinline{withdraw} during reentrancy to reclaim their deposits but still receiving credits.
+
+\textbf{Configuration Manipulation:}
+Many DeFi applications employ on-chain configurations to implement custom business logic. However, improper safeguarding of these configuration values can expose them to reentrancy attacks. For instance, two NFT projects, CreatureToadz~\cite{attack-report:creature-toadz} and HypeBeans~\cite{attack-report:hype-beans}, were exploited on October 21, 2021, and February 3, 2023, respectively. Both projects featured a pre-sale phase that allowed specific users to mint one NFT per wallet. Attackers utilized the \lstinline{onERC721Received} hook to mint recursively, bypassing the one-per-wallet restriction. Another example is the Revest Finance attack~\cite{attack-report:revest-finance}, where the attacker exploited an ERC1155 hook to overwrite an NFT's configuration data, including the associated amount of RENA (see Section~\ref{case-study:4}).
+
+\textbf{Reentrant Deposit:}
+Although conceptually the opposite of reentrant withdrawal, attackers can also use recursive deposits to their advantage. The vulnerability arises when a target contract calculates user balances by measuring differences before and after token transfers. By recursively depositing during reentrancy, attackers accumulate multiple credits for a single deposit, allowing them to withdraw more tokens than they originally deposited. Example incidents include Paraluni attack~\cite{attack-report:paraluni} and Grim Finance attack~\cite{attack-report:grim-finance}.
+
+\textbf{Reentrant Borrow:}
+Similar to reentrant withdrawal, reentrant borrow attacks involve exploiting lending protocols to bypass borrowing limits. These attacks are distinct in that attackers also aim to redeem their collateral after repayment. A representative example is the DeFiPie attack~\cite{attack-report:defipie}. In this case, the attacker first created malicious tokens and registered them as eligible collateral in the protocol. Next, they created token pairs on Uniswap, which acted as the protocol's price oracle, thereby assigning these malicious tokens a market price. Finally, the attacker used these tokens to repay loans and redeem collateral. Notably, all three reentrant borrow victims analyzed—including DeFiPie—were forks of Compound, inheriting its vulnerabilities (see Section~\ref{compound}).
+
+\textbf{Impersonation:}
+\label{attack-strategy:impersonation}
+An impersonation attack occurs when a contract fails to secure critical functions with proper access controls like whitelist mechanisms. A notable example is the Abracadabra Money white-hat attack~\cite{attack-report:abracadabra-money}. Here, the \lstinline{CauldronV4} contract supported cloning and invoked the \lstinline{init} function to set an oracle address. During this process, the oracle's \lstinline{get} function was called. However, this function lacked proper access control, allowing an attacker to create a malicious oracle contract. By reentering \lstinline{CauldronV4}, the attacker could transfer other users' tokens to themselves. Fortunately, the developer team identified the vulnerability before it could be exploited by attackers, and preemptively executed the attack themselves, transferring users' funds to a more secure contract.
+
+% \fig{attack-strategy}{Attack Strategy}
+
+\insightbox{Attack Strategy}{We found seven strategies employed by attackers. \textbf{Price Manipulation} is the most prevalent, enabling attackers to inflate or deflate token prices. \textbf{Reentrant Withdrawal} remains a widely studied approach, though its occurrence has decreased recently. \textbf{Balance Deception} targets flawed balance checks, allowing attackers to bypass repayment and credit constraints. Together, these three strategies account for 74.3\% of all reentrancy attacks analyzed.}
+
+\subsection{Vulnerability Origin}
+\label{quantitative:vulnerability-origin}
+
+While most victims of reentrancy attacks suffer from flaws in their own code, vulnerabilities can also originate externally, such as through forked codebases or interactions with other smart contracts (\eg price oracles). Our analysis identifies eleven examples of external vulnerabilities. Figure~\ref{fig:vulnerability-origin} depicts the distribution of reentrancy vulnerabilities by their origins (projects with only a single occurrence are grouped under ``Other''). Below, we describe the four sources that were linked to more than one incident.
+
+\textbf{Compound:} \label{compound} A foundational lending protocol on Ethereum. Compound's codebase has been widely adopted by numerous DeFi projects. However, earlier versions of Compound contained reentrancy vulnerabilities, which were patched on June 6, 2022. Compound itself avoided exploitation due to its rigorous vetting process, which limits interactions to only standard ERC20 tokens. However, projects that forked older versions of Compound became susceptible to attacks.
+
+\textbf{Curve:} A prominent DEX and AMM on Ethereum. Curve's price oracle, widely used by other projects, contained a read-only reentrancy vulnerability. Although Curve itself remained unaffected, projects relying on this price feed became vulnerable to price manipulation.
+
+\textbf{SushiSwap:} A well-known Uniswap fork. SushiSwap introduced the \lstinline{MasterChef} contract, adopted by many DeFi projects. Unfortunately, the \lstinline{MasterChef.emergencyWithdraw} function contains a clear reentrancy vulnerability, enabling attackers to execute reentrant withdrawals and drain funds.
+
+\textbf{Balancer:} Another well-established AMM protocol on Ethereum. But just like Curve, its widely used price oracle was affected by a read-only reentrancy vulnerability, exposing dependent projects to price manipulation attacks.
+
+% \fig{vulnerability-origin}{Vulnerability Origin}
+
+\insightbox{Vulnerability Origin}{Some projects inherit reentrancy vulnerabilities from popular protocols like Compound and SushiSwap, or face exploitation due to read-only vulnerabilities in external price oracles like Curve and Balancer. This highlights the risks of forking codebases or relying on external contracts.}
+
+\subsection{Attack Timeline}
+\label{quantitative:attack-timeline}
+
+The timeline of an attack provides valuable insights into its progression. %From the victim's perspective, incidents often appear complex, involving audit histories, post-attack mitigation, and recovery efforts. However, 
+From the attacker's viewpoint, the process is relatively straightforward: identifying a vulnerability in a deployed contract, developing an exploit strategy, deploying an attack contract, and executing the exploit transaction. We take the attacker's viewpoint.  
+Our analysis of timestamps for vulnerable contract deployments, attack contract deployments, and first exploit transactions reveals that vulnerability exposure time—the interval between a vulnerable contract's deployment and the first exploit transaction—is \emph{relatively short}. The median exposure time is 50.9 days, with extreme cases occurring within a single day. This is surprising given the sophistication of many attacks, which often take days for blockchain security companies to analyze and mitigate post-incident. This suggests two possibilities: either attackers possess exceptional skills for rapid vulnerability discovery and exploitation, or vulnerabilities are publicly accessible before deployment through channels such as GitHub repositories. The latter seems more plausible.
+
+Another observation is the evolving strategy of attackers. Increasingly, attackers deploy their malicious contracts directly within exploit transactions (highlighted in red in Figure~\ref{fig:attack-timeline}), making preemptive detection impossible. This evolution has significantly reduced the efficacy of methods like BlockWatchdog~\cite{attack-contract-detection} and Backrunner~\cite{backrunner}, which aim to identify attackers' contracts before exploitation.
+
+\insightbox{Attack Timeline}{Attackers often exploit vulnerabilities within days after contract deployment, sometimes even hours, with a median exposure time of 50.9 days. Attackers increasingly deploy malicious contracts within exploit transactions, bypassing preemptive detection mechanisms.}

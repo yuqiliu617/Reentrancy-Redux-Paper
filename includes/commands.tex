@@ -1,0 +1,50 @@
+\newcommand{\etal}{\textit{et al}.}
+\newcommand{\ie}{\textit{i}.\textit{e}., }
+\newcommand{\eg}{\textit{e}.\textit{g}., }
+\newcommand{\aka}{\textit{a}.\textit{k}.\textit{a}.}
+
+\def\ReentrancyTotalRecord{80}
+\def\ReentrancyTotalNumber{73}
+\def\ReentrancyTotalAnalyzed{73}
+
+\newcommand{\insightbox}[2]{
+    \begin{tcolorbox}[
+        colframe=blue!40!black, 
+        colback=blue!5!white, 
+        left=5px,right=5px,top=3px,bottom=3px,
+        title=Key Findings: #1]
+    #2
+    \end{tcolorbox}
+}
+\newcommand{\fig}[3][0.45]{
+    \begin{figure}[ht]
+        \centering
+        \vspace{-2mm}
+        \includegraphics[width=#1\textwidth]{images/#2.png}
+        \vspace{-1mm}
+        \caption{#3}
+        \label{fig:#2}
+        \vspace{-4mm}
+    \end{figure}
+}
+
+\newcommand{\subfig}[4][-2mm]{
+    \begin{subfigure}{#2\textwidth}
+        \includegraphics{images/#3.png}
+        \vspace{#1}
+        \caption{#4}
+        \label{fig:#3}
+    \end{subfigure}
+}
+
+\newcommand{\nohyphen}[1]{
+    { 
+    \hyphenpenalty=100000 % local assignment
+    #1
+    \par
+    }
+}
+
+\newcommand{\hlc}[2][BrickRed]{{%
+    \textcolor{#1}{#2}
+}}
